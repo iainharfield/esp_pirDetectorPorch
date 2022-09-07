@@ -130,51 +130,64 @@ void pirRead()
     pinVal2 = digitalRead(inOverrideLowPin);   // override 1
     pinVal3 = digitalRead(inOverrideHighPin2); // override 2
 
-    if (pinVal1 == 1 || pinVal2 == 0 || pinVal3 == 1)
-    {
+	if (pinVal1 == 1 || pinVal2 == 0 || pinVal3 == 1)
+	{
 
-        bManMode = true;
-        memset(logString, 0, sizeof logString);
-        if (pinVal1 == 1)
-        {
+		bManMode = true;
+		memset(logString, 0, sizeof logString);
+		if (pinVal1 == 1 )
+		{
             if (pirState != pirStateDetection)
             {
-                sprintf(logString, "%s,%s,%s,%s", ntptod, espDevice.getType().c_str(), espDevice.getName().c_str(), "PIR Detection.");
+			    sprintf(logString, "%s,%s,%s,%s", ntptod, espDevice.getType().c_str(), espDevice.getName().c_str(), "PIR Detection.");
                 printTelnet((String)logString);
+                mqttLog(logString, true, true);
                 pirState = pirStateDetection;
                 mqttClient.publish(oh3StateValue, 1, true, "DETECTION");
             }
-        }
-        else
-        {
+            else
+            {
+                digitalWrite(outRelayPin, HIGH);
+                delay(100);
+            }
+		}
+		else
+		{
             if (pirState != pirStateDetection)
             {
-                sprintf(logString, "%s,%s,%s,%s", ntptod, espDevice.getType().c_str(), espDevice.getName().c_str(), "Forced detection.");
+			    sprintf(logString, "%s,%s,%s,%s", ntptod, espDevice.getType().c_str(), espDevice.getName().c_str(), "Forced detection.");
                 printTelnet((String)logString);
+                mqttLog(logString, true, true);
 
                 pirState = pirStateDetection;
                 mqttClient.publish(oh3StateValue, 1, true, "FORCED-DETECTION");
             }
-        }
-        mqttLog(logString, true, true);
-        digitalWrite(outRelayPin, HIGH);
-    }
-    else
-    {
-        bManMode = false;
-        if (pirState == pirStateDetection)
+            else
+            {
+                digitalWrite(outRelayPin, HIGH);
+                delay(100);
+            }
+		}
+	}
+	else
+	{
+		bManMode = false;
+        if  (pirState != pirStateNoDetection)
         {
-            // if (reporting == REPORT_DEBUG)
-            //{
-            sprintf(logString, "%s,%s,%s,%s", ntptod, espDevice.getType().c_str(), espDevice.getName().c_str(), "No detection.");
-            printTelnet((String)logString);
-            mqttLog(logString, true, true);
-            //}
+           //if (reporting == REPORT_DEBUG)
+	        //{
+					sprintf(logString, "%s,%s,%s,%s", ntptod, espDevice.getType().c_str(), espDevice.getName().c_str(), "No detection.");
+                    printTelnet((String)logString);
+					mqttLog(logString, true, true);
+		    //}
             pirState = pirStateNoDetection;
-            digitalWrite(outRelayPin, LOW);
-            mqttClient.publish(oh3StateValue, 1, true, "NO-DETECTION");
-        }
-    }
+		    digitalWrite(outRelayPin, LOW);
+            delay(100);
+            
+		    mqttClient.publish(oh3StateValue, 1, true, "NO-DETECTION");
+        }    
+        
+	}
 }
 
 // Process any application specific inbound MQTT messages
